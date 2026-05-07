@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thin-Film Optical Coating Simulator</title>
+<script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1117;
+    --panel: #1a1d27;
+    --card: #22263a;
+    --accent: #5e81f4;
+    --accent2: #f45e81;
+    --text: #e8eaf6;
+    --text-dim: #7b82a8;
+    --border: #2d3250;
+    --hover: #7b96f7;
+    --danger: #f45e81;
+    --success: #4caf87;
+    --warning: #f4a25e;
+    --input-bg: #22263a;
+    --scrollbar-bg: #1a1d27;
+    --scrollbar-thumb: #3a3f5c;
+    --alt-row: #1a1d27;
+  }
+  [data-theme="light"] {
+    --bg: #ffffff;
+    --panel: #f3f4f6;
+    --card: #ffffff;
+    --accent: #f59e0b;
+    --accent2: #dc2626;
+    --text: #1f2937;
+    --text-dim: #6b7280;
+    --border: #d1d5db;
+    --hover: #fbbf24;
+    --danger: #dc2626;
+    --success: #10b981;
+    --warning: #d97706;
+    --input-bg: #ffffff;
+    --scrollbar-bg: #f3f4f6;
+    --scrollbar-thumb: #9ca3af;
+    --alt-row: #f9fafb;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+  }
+  .main-container {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    padding: 12px;
+    gap: 12px;
+  }
+  .left-panel {
+    width: 320px;
+    min-width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .title-block {
+    text-align: center;
+    padding: 8px 0;
+  }
+  .title-block h1 {
+    font-size: 22px;
+    font-weight: bold;
+    color: var(--accent);
+    letter-spacing: 1px;
+  }
+  .title-block .subtitle {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .theme-selector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .theme-selector select {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    padding: 4px 8px;
+  }
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 4px 0;
+  }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+  }
+  .panel h3 {
+    color: var(--accent);
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+  .input-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .input-row label {
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .input-row input, .input-row select {
+    width: 120px;
+    padding: 4px 8px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--text);
+    font-size: 12px;
+  }
+  .input-row input:focus {
+    border-color: var(--accent);
+    outline: none;
+  }
+  /* Genel input stilleri - arka plan rengi uyumsuzluğunu giderir */
+  input[type="number"], input[type="text"], input[type="range"] {
+    background: var(--card);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 4px 8px;
+  }
+  input[type="range"] {
+    background: transparent;
+    padding: 0;
+    height: 6px;
+    -webkit-appearance: none;
+    margin: 5px 0;
+  }
+  input[type="range"]::-webkit-slider-runnable-track {
+    background: var(--border);
+    border-radius: 3px;
+    height: 4px;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    background: var(--accent);
+    width: 14px;
+    height: 14px;
+    border-radius: 7px;
+    margin-top: -5px;
+  }
+  button {
+    background: var(--accent);
+    border: none;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  button:hover {
+    background: var(--hover);
+  }
+  button.secondary {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+  }
+  button.secondary:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  button.danger {
+    background: var(--danger);
+    color: white;
+    font-size: 14px;
+    line-height: 1;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+  button.danger:hover {
+    background: #f77b9a;
+  }
+  .scroll-area {
+    flex: 1;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--panel);
+    padding: 8px;
+    min-height: 100px;
+    max-height: 220px;
+  }
+  .scroll-area::-webkit-scrollbar {
+    width: 6px;
+  }
+  .scroll-area::-webkit-scrollbar-track {
+    background: var(--scrollbar-bg);
+    border-radius: 4px;
+  }
+  .scroll-area::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 4px;
+  }
+  .materials-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .materials-table th, .materials-table td {
+    text-align: left;
+    padding: 4px;
+    font-size: 12px;
+  }
+  .materials-table th {
+    color: var(--text-dim);
+  }
+  .materials-table input {
+    background: var(--card);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+  .stats-cards {
+    display: flex;
+    gap: 8px;
+  }
+  .stat-card {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 8px;
+    text-align: center;
+  }
+  .stat-value {
+    font-size: 22px;
+    font-weight: bold;
+  }
+  .stat-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  .progress-bar {
+    width: 100%;
+    height: 10px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 6px 0;
+  }
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--accent);
+    transition: width 0.1s;
+  }
+  .right-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .tabs {
+    display: flex;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+  }
+  .tab {
+    padding: 8px 18px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    margin-right: 3px;
+    background: var(--card);
+    color: var(--text-dim);
+  }
+  .tab.active {
+    background: var(--panel);
+    color: var(--accent);
+    border-bottom: 2px solid var(--accent);
+  }
+  .tab-content {
+    flex: 1;
+    display: none;
+    overflow: hidden;
+    padding: 10px;
+    min-height: 0;
+  }
+  .tab-content.active {
+    display: flex;
+    flex-direction: column;
+  }
+  .plot-container {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+  }
+  .table-controls {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+  table.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 12px;
+  }
+  table.data-table th, table.data-table td {
+    border: 1px solid var(--border);
+    padding: 6px;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  table.data-table thead {
+    background: var(--panel);
+    color: var(--text-dim);
+    cursor: pointer;
+  }
+  table.data-table tbody tr:nth-child(even) {
+    background: var(--alt-row);
+  }
+  .inspector-input {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .inspector-input input {
+    flex: 1;
+    padding: 6px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--text);
+  }
+  .top-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+  .status-bar {
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+    padding: 4px 12px;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+</style>
+</head>
+<body data-theme="dark">
+
+<div class="main-container">
+  <!-- LEFT PANEL -->
+  <div class="left-panel">
+    <div class="title-block">
+      <h1>⬡ THIN-FILM<br>SIMULATOR</h1>
+      <div class="theme-selector">
+        <label for="themeSelect">Theme:</label>
+        <select id="themeSelect">
+          <option value="dark">Dark</option>
+          <option value="light">Light</option>
+        </select>
+      </div>
+    </div>
+    <div class="divider"></div>
+
+    <div class="panel">
+      <h3>Physical Setup</h3>
+      <div class="input-row"><label>Design λ₀ (nm)</label><input type="number" id="lambdaDesign" value="600" step="1" min="200" max="5000"></div>
+      <div class="input-row"><label>λ sweep min (nm)</label><input type="number" id="lambdaMin" value="400" step="1" min="100" max="4000"></div>
+      <div class="input-row"><label>λ sweep max (nm)</label><input type="number" id="lambdaMax" value="900" step="1" min="200" max="5000"></div>
+      <div class="input-row"><label>n incident</label><input type="number" id="nIncident" value="1.0" step="0.05" min="1" max="4"></div>
+      <div class="input-row"><label>n substrate</label><input type="number" id="nSubstrate" value="1.5" step="0.05" min="1" max="4"></div>
+    </div>
+
+    <div class="panel scroll-area" id="materialsPanel">
+      <h3>Materials</h3>
+      <table class="materials-table" id="materialsTable">
+        <thead><tr><th></th><th>n</th><th>Count</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <button id="addMaterialBtn" class="secondary" style="margin-top:8px;">+ Add Material</button>
+    </div>
+
+    <div class="panel">
+      <h3>Simulation</h3>
+      <div id="possibleCoatings" style="color:var(--text-dim); font-size:12px;">Possible coatings: —</div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      <div style="display:flex; gap:8px;">
+        <button id="runBtn">▶ Run Simulation</button>
+        <button id="exportBtn" class="secondary">⬇ Export CSV</button>
+      </div>
+    </div>
+
+
+    <div class="stats-cards">
+      <div class="stat-card">
+        <div class="stat-value" style="color:var(--accent);" id="bestR">—</div>
+        <div class="stat-label">Best R</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="color:var(--accent2);" id="bestT">—</div>
+        <div class="stat-label">Best T</div>
+      </div>
+    </div>
+
+    <div class="status-bar" id="statusBar">Ready — configure parameters and click ▶ Run Simulation</div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+    <div class="tabs" id="tabBar">
+      <div class="tab active" data-tab="all">🌈 All Coatings</div>
+      <div class="tab" data-tab="best">🏆 Best R & T</div>
+      <div class="tab" data-tab="top">📊 Top-N Reflectors</div>
+      <div class="tab" data-tab="table">📋 Rankings Table</div>
+      <div class="tab" data-tab="inspector">🔬 Inspector</div>
+    </div>
+
+    <div class="tab-content active" id="tab-all">
+      <div class="plot-container" id="plotAll"></div>
+    </div>
+    <div class="tab-content" id="tab-best">
+      <div class="plot-container" id="plotBest"></div>
+    </div>
+    <div class="tab-content" id="tab-top">
+      <div class="top-controls">
+        <label>Show top</label><input type="number" id="topN" value="10" min="1" max="30" style="width:60px;">
+        <label>coatings</label>
+        <label><input type="checkbox" id="showT"> Show T</label>
+        <button id="replotTopBtn" class="secondary">Replot</button>
+      </div>
+      <div class="plot-container" id="plotTop"></div>
+    </div>
+    <div class="tab-content" id="tab-table">
+      <div class="table-controls">Double-click a row → show in Inspector | Click header to sort</div>
+      <div style="overflow:auto; flex:1;">
+        <table class="data-table" id="rankingsTable">
+          <thead><tr><th>Rank</th><th>Coating</th><th>R @ design λ</th><th>T @ design λ</th><th>R max</th><th>R min</th><th>Bandwidth</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="tab-content" id="tab-inspector">
+      <div class="inspector-input">
+        <input type="text" id="customCoating" placeholder="e.g. H L H L H L H L">
+        <button id="inspectBtn">Inspect</button>
+      </div>
+      <div class="plot-container" id="plotInspector"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  // ──────────────────────────────────────────────
+  // TMM Engine (JavaScript)
+  // ──────────────────────────────────────────────
+  class TMM {
+    static c(re, im = 0) {
+      return { re, im };
+    }
+
+    static add(x, y) {
+      return { re: x.re + y.re, im: x.im + y.im };
+    }
+
+    static sub(x, y) {
+      return { re: x.re - y.re, im: x.im - y.im };
+    }
+
+    static mul(x, y) {
+      return {
+        re: x.re * y.re - x.im * y.im,
+        im: x.re * y.im + x.im * y.re
+      };
+    }
+
+    static div(x, y) {
+      const denom = y.re * y.re + y.im * y.im;
+      if (denom === 0) return TMM.c(0, 0);
+      return {
+        re: (x.re * y.re + x.im * y.im) / denom,
+        im: (x.im * y.re - x.re * y.im) / denom
+      };
+    }
+
+    static layerMatrix(n, d, wavelength) {
+      const phi = 2 * Math.PI * n * d / wavelength;
+      const cosP = Math.cos(phi);
+      const sinP = Math.sin(phi);
+      return [
+        [TMM.c(cosP), TMM.c(0, -sinP / n)],
+        [TMM.c(0, -n * sinP), TMM.c(cosP)]
+      ];
+    }
+
+    static compute(coating, nValues, wavelengths, nIncident, nSubstrate) {
+      const R = new Float64Array(wavelengths.length);
+      const T = new Float64Array(wavelengths.length);
+      for (let i = 0; i < wavelengths.length; i++) {
+        const lam = wavelengths[i];
+        let M = [[TMM.c(1), TMM.c(0)], [TMM.c(0), TMM.c(1)]];
+        for (const mat of coating) {
+          if (!nValues[mat]) {
+            throw new Error(`Unknown material "${mat}"`);
+          }
+          const { n, lambda_design } = nValues[mat];
+          const d = lambda_design / (4.0 * n);
+          const L = TMM.layerMatrix(n, d, lam);
+          const a = M[0][0], b = M[0][1], c = M[1][0], d0 = M[1][1];
+          const e = L[0][0], f = L[0][1], g = L[1][0], h = L[1][1];
+          M = [
+            [TMM.add(TMM.mul(a, e), TMM.mul(b, g)), TMM.add(TMM.mul(a, f), TMM.mul(b, h))],
+            [TMM.add(TMM.mul(c, e), TMM.mul(d0, g)), TMM.add(TMM.mul(c, f), TMM.mul(d0, h))]
+          ];
+        }
+        const m00 = M[0][0], m01 = M[0][1], m10 = M[1][0], m11 = M[1][1];
+        const n0 = nIncident, ng = nSubstrate;
+        const left = TMM.add(TMM.mul(TMM.c(n0), m00), TMM.mul(TMM.c(n0 * ng), m01));
+        const right = TMM.add(m10, TMM.mul(TMM.c(ng), m11));
+        const r = TMM.div(TMM.sub(left, right), TMM.add(left, right));
+        const rAbs = Math.sqrt(r.re*r.re + r.im*r.im);
+        R[i] = Math.max(0, Math.min(1, rAbs * rAbs));
+        T[i] = 1.0 - R[i];
+      }
+      return { R, T };
+    }
+  }
+
+  // ──────────────────────────────────────────────
+  // Application State
+  // ──────────────────────────────────────────────
+  const state = {
+    materials: {
+      H: { n: 2.30, count: 4 },
+      L: { n: 1.35, count: 4 }
+    },
+    extraMaterials: {},
+    results: null,
+    sortedCoatings: [],
+    sortedTransmitters: [],
+    wavelengths: null,
+    inspectedCoating: null,
+    animFrame: 0,
+    animTimer: null,
+    currentTheme: 'dark'
+  };
+  const MAX_SIMULATED_COATINGS = 50000;
+
+  function getNextKey() {
+    const letters = "ABCDEFGIJKMNOPQRSUVWXYZ";
+    for (const ch of letters) {
+      if (!(ch in state.materials)) return ch;
+    }
+    return null;
+  }
+
+  function getMaterialColor(key) {
+    if (key === 'H') return 'var(--accent)';
+    if (key === 'L') return 'var(--accent2)';
+    return '#b8860b';
+  }
+
+  // Unique permutations generator
+  function* permuteUnique(arr) {
+    const counter = {};
+    for (const x of arr) counter[x] = (counter[x] || 0) + 1;
+    function* backtrack(path) {
+      if (path.length === arr.length) {
+        yield [...path];
+        return;
+      }
+      for (const key in counter) {
+        if (counter[key] > 0) {
+          counter[key]--;
+          path.push(key);
+          yield* backtrack(path);
+          path.pop();
+          counter[key]++;
+        }
+      }
+    }
+    yield* backtrack([]);
+  }
+
+  function getAllCoatings() {
+    const pool = [];
+    for (const [key, val] of Object.entries(state.materials)) {
+      for (let i = 0; i < val.count; i++) pool.push(key);
+    }
+    if (pool.length === 0) return [];
+    const coatings = [];
+    for (const perm of permuteUnique(pool)) {
+      coatings.push(perm);
+    }
+    return coatings;
+  }
+
+  function updatePossibleCount() {
+    const totalDistinct = countDistinctCoatings();
+    if (totalDistinct === 0) {
+      document.getElementById('possibleCoatings').textContent = 'Possible coatings: 0';
+      return;
+    }
+    document.getElementById('possibleCoatings').textContent = `Possible coatings: ${totalDistinct.toLocaleString()}`;
+  }
+
+  function countDistinctCoatings() {
+    const counts = Object.values(state.materials).map(m => Math.max(0, Math.floor(Number(m.count) || 0)));
+    const poolSize = counts.reduce((sum, count) => sum + count, 0);
+    if (poolSize === 0) return 0;
+    const factorial = (n) => { let r=1; for(let i=2;i<=n;i++)r*=i; return r; };
+    let denom = 1;
+    for (const count of counts) denom *= factorial(count);
+    return factorial(poolSize) / denom;
+  }
+
+  function average(values) {
+    let sum = 0;
+    for (const value of values) sum += value;
+    return values.length ? sum / values.length : 0;
+  }
+
+  // ──────────────────────────────────────────────
+  // UI Render
+  // ──────────────────────────────────────────────
+  function renderMaterials() {
+    const tbody = document.querySelector('#materialsTable tbody');
+    tbody.innerHTML = '';
+    const keys = Object.keys(state.materials);
+    for (const key of keys) {
+      const mat = state.materials[key];
+      const isExtra = key !== 'H' && key !== 'L';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="color:${getMaterialColor(key)}">${key}</td>
+        <td><input type="number" value="${mat.n}" step="0.05" min="1" max="6" data-key="${key}" data-field="n" style="width:70px;"></td>
+        <td><input type="number" value="${mat.count}" step="1" min="0" max="20" data-key="${key}" data-field="count" style="width:60px;"></td>
+        <td>${isExtra ? `<button class="danger remove-material" data-key="${key}">✕</button>` : ''}</td>
+      `;
+      tbody.appendChild(tr);
+    }
+    document.querySelectorAll('#materialsTable input').forEach(inp => {
+      inp.addEventListener('change', function() {
+        const key = this.dataset.key;
+        const field = this.dataset.field;
+        const parsed = field === 'count' ? parseInt(this.value, 10) : parseFloat(this.value);
+        state.materials[key][field] = Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+        this.value = state.materials[key][field];
+        updatePossibleCount();
+      });
+    });
+    document.querySelectorAll('.remove-material').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const key = this.dataset.key;
+        delete state.materials[key];
+        renderMaterials();
+        updatePossibleCount();
+        setStatus(`Material '${key}' removed.`);
+      });
+    });
+  }
+
+  document.getElementById('addMaterialBtn').addEventListener('click', () => {
+    const key = getNextKey();
+    if (!key) { setStatus('Maximum number of materials reached.'); return; }
+    state.materials[key] = { n: 1.7, count: 2 };
+    renderMaterials();
+    updatePossibleCount();
+  });
+
+  // Tabs
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      this.classList.add('active');
+      const target = this.dataset.tab;
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.getElementById('tab-' + target).classList.add('active');
+      if (target === 'all' && state.results) plotAll();
+      else if (target === 'best' && state.results) plotBest();
+      else if (target === 'top' && state.results) plotTop();
+      if (target === 'table' && state.results) renderTable();
+      if (target === 'inspector' && state.results && state.inspectedCoating) plotInspector(state.inspectedCoating);
+    });
+  });
+
+  // Theme
+  document.getElementById('themeSelect').addEventListener('change', function(e) {
+    state.currentTheme = this.value;
+    document.body.setAttribute('data-theme', state.currentTheme);
+    if (state.results) {
+      const plotlyReady = canPlot();
+      if (plotlyReady) {
+        plotAll();
+        plotBest();
+        plotTop();
+        if (state.inspectedCoating) plotInspector(state.inspectedCoating);
+      }
+      renderTable();
+    }
+  });
+
+  // ──────────────────────────────────────────────
+  // Simulation (with chunked progress)
+  // ──────────────────────────────────────────────
+  function runSimulation() {
+    const lambdaDesign = parseFloat(document.getElementById('lambdaDesign').value);
+    const lambdaMin = parseFloat(document.getElementById('lambdaMin').value);
+    const lambdaMax = parseFloat(document.getElementById('lambdaMax').value);
+    const nIncident = parseFloat(document.getElementById('nIncident').value);
+    const nSubstrate = parseFloat(document.getElementById('nSubstrate').value);
+    const numericInputs = [lambdaDesign, lambdaMin, lambdaMax, nIncident, nSubstrate];
+
+    if (numericInputs.some(value => !Number.isFinite(value))) {
+      setStatus('Please enter valid numeric simulation parameters.');
+      return;
+    }
+    if (lambdaMin >= lambdaMax) {
+      setStatus('Sweep min must be smaller than sweep max.');
+      return;
+    }
+    if (lambdaDesign <= 0 || lambdaMin <= 0 || lambdaMax <= 0 || nIncident <= 0 || nSubstrate <= 0) {
+      setStatus('Wavelengths and refractive indices must be positive.');
+      return;
+    }
+
+    const totalDistinct = countDistinctCoatings();
+    if (totalDistinct > MAX_SIMULATED_COATINGS) {
+      setStatus(`Too many coatings (${totalDistinct.toLocaleString()}). Reduce material counts below ${MAX_SIMULATED_COATINGS.toLocaleString()} combinations.`);
+      return;
+    }
+
+    state.wavelengths = Array.from({length: 500}, (_, i) => lambdaMin + (lambdaMax - lambdaMin) * i / 499);
+    const coatings = getAllCoatings();
+    if (coatings.length === 0) { setStatus('⚠ No materials defined.'); return; }
+    if (coatings.length > 3000) {
+      setStatus(`⚠ ${coatings.length.toLocaleString()} coatings — this may take a while…`);
+    } else {
+      setStatus(`Computing ${coatings.length.toLocaleString()} coatings…`);
+    }
+    document.getElementById('runBtn').disabled = true;
+    const progressFill = document.getElementById('progressFill');
+    progressFill.style.width = '0%';
+
+    const nValues = {};
+    for (const [key, mat] of Object.entries(state.materials)) {
+      if (!Number.isFinite(mat.n) || mat.n <= 0 || !Number.isFinite(mat.count) || mat.count < 0) {
+        setStatus(`Material ${key} has invalid n or count.`);
+        document.getElementById('runBtn').disabled = false;
+        return;
+      }
+      nValues[key] = { n: mat.n, lambda_design: lambdaDesign };
+    }
+
+    state.results = {};
+    const lamEval = lambdaDesign;
+    const singleLam = [lamEval];
+
+    return new Promise((resolve) => {
+      let i = 0;
+      const total = coatings.length;
+      function processChunk() {
+        const chunkSize = 20;
+        const end = Math.min(i + chunkSize, total);
+        for (; i < end; i++) {
+          const coating = coatings[i];
+          const { R, T } = TMM.compute(coating, nValues, state.wavelengths, nIncident, nSubstrate);
+          const { R: Reval } = TMM.compute(coating, nValues, singleLam, nIncident, nSubstrate);
+          const R_eval = Reval[0];
+          const T_eval = 1 - R_eval;
+          state.results[coating.join('')] = {
+            R,
+            T,
+            R_eval,
+            T_eval,
+            R_avg: average(R),
+            T_avg: average(T),
+            R_max: Math.max(...R),
+            R_min: Math.min(...R),
+            T_min: Math.min(...T)
+          };
+        }
+        progressFill.style.width = (100 * i / total) + '%';
+        if (i < total) {
+          setTimeout(processChunk, 0);
+        } else {
+          resolve();
+        }
+      }
+      processChunk();
+    }).then(() => {
+      const sortedKeys = Object.keys(state.results).sort((a,b) => {
+        const aData = state.results[a], bData = state.results[b];
+        return (bData.R_eval - aData.R_eval)
+          || (bData.R_avg - aData.R_avg)
+          || (bData.R_min - aData.R_min)
+          || a.localeCompare(b);
+      });
+      state.sortedCoatings = sortedKeys;
+      state.sortedTransmitters = Object.keys(state.results).sort((a,b) => {
+        const aData = state.results[a], bData = state.results[b];
+        return (bData.T_eval - aData.T_eval)
+          || (bData.T_avg - aData.T_avg)
+          || (bData.T_min - aData.T_min)
+          || a.localeCompare(b);
+      });
+      if (sortedKeys.length === 0) {
+        setStatus('No coating results were produced.');
+        document.getElementById('runBtn').disabled = false;
+        return;
+      }
+      document.getElementById('bestR').textContent = state.results[sortedKeys[0]].R_eval.toFixed(4);
+      document.getElementById('bestT').textContent = state.results[state.sortedTransmitters[0]].T_eval.toFixed(4);
+      const bestRKey = sortedKeys[0];
+      const bestTKey = state.sortedTransmitters[0];
+      const tiedReflectors = sortedKeys.filter(key => Math.round(state.results[key].R_eval * 10000) === Math.round(state.results[bestRKey].R_eval * 10000)).length;
+      const tiedTransmitters = state.sortedTransmitters.filter(key => Math.round(state.results[key].T_eval * 10000) === Math.round(state.results[bestTKey].T_eval * 10000)).length;
+      const plotlyReady = canPlot();
+      if (plotlyReady) {
+        plotAll();
+        plotBest();
+        plotTop();
+      }
+      renderTable();
+      document.getElementById('runBtn').disabled = false;
+      setStatus(`✔ Done — ${sortedKeys.length.toLocaleString()} coatings computed. Best R: ${bestRKey} (R=${state.results[bestRKey].R_eval.toFixed(4)}, avg R=${state.results[bestRKey].R_avg.toFixed(4)}; ${tiedReflectors} tied by shown R). Best T: ${bestTKey} (T=${state.results[bestTKey].T_eval.toFixed(4)}, avg T=${state.results[bestTKey].T_avg.toFixed(4)}; ${tiedTransmitters} tied by design T).`);
+      if (!plotlyReady) {
+        setStatus(`${sortedKeys.length.toLocaleString()} coatings computed, but plots are unavailable because Plotly did not load.`);
+      }
+    }).catch(err => {
+      setStatus('Error: ' + err);
+      document.getElementById('runBtn').disabled = false;
+    });
+  }
+
+  document.getElementById('runBtn').addEventListener('click', runSimulation);
+
+  // ──────────────────────────────────────────────
+  // Plotting with Plotly
+  // ──────────────────────────────────────────────
+  function getThemeColors() {
+    const style = getComputedStyle(document.body);
+    return {
+      bg: style.getPropertyValue('--bg').trim(),
+      panel: style.getPropertyValue('--panel').trim(),
+      text: style.getPropertyValue('--text').trim(),
+      textDim: style.getPropertyValue('--text-dim').trim(),
+      accent: style.getPropertyValue('--accent').trim(),
+      accent2: style.getPropertyValue('--accent2').trim(),
+      border: style.getPropertyValue('--border').trim()
+    };
+  }
+
+  function canPlot() {
+    if (window.Plotly && typeof Plotly.react === 'function') return true;
+    setStatus('Plotly could not be loaded. Check your internet connection or use a local Plotly copy.');
+    return false;
+  }
+
+  function renderPlot(containerId, traces, layout) {
+    const el = document.getElementById(containerId);
+    const rect = el.getBoundingClientRect ? el.getBoundingClientRect() : { width: el.clientWidth, height: el.clientHeight };
+    const sizedLayout = {
+      ...layout,
+      autosize: true,
+      width: Math.max(rect.width || el.clientWidth || 0, 520),
+      height: Math.max(rect.height || el.clientHeight || 0, 360)
+    };
+    Plotly.react(el, traces, sizedLayout, { responsive: true, displaylogo: false });
+    const scheduleResize = window.requestAnimationFrame || ((fn) => setTimeout(fn, 0));
+    if (Plotly.Plots && typeof Plotly.Plots.resize === 'function') {
+      scheduleResize(() => Plotly.Plots.resize(el));
+    }
+  }
+
+  function topTraceColor(index) {
+    const palette = [
+      '#2563eb', '#dc2626', '#16a34a', '#ca8a04', '#9333ea',
+      '#0891b2', '#ea580c', '#4f46e5', '#be123c', '#15803d',
+      '#7c3aed', '#0f766e', '#b45309', '#1d4ed8', '#a21caf'
+    ];
+    return palette[index % palette.length];
+  }
+
+  function compareRowMetric(rowA, rowB, keys, desc) {
+    for (const key of keys) {
+      const a = parseFloat(rowA.dataset[key]);
+      const b = parseFloat(rowB.dataset[key]);
+      if (Number.isFinite(a) && Number.isFinite(b) && a !== b) {
+        return desc ? b - a : a - b;
+      }
+    }
+    return rowA.children[1].innerText.localeCompare(rowB.children[1].innerText);
+  }
+
+  function plasmaColor(t) {
+    const stops = [
+      [0.0, [13,8,135]], [0.2, [84,2,163]], [0.4, [139,11,140]],
+      [0.6, [185,50,88]], [0.8, [227,110,30]], [1.0, [240,249,33]]
+    ];
+    t = Math.max(0, Math.min(1, t));
+    let lower = stops[0], upper = stops[stops.length-1];
+    for (let i = 0; i < stops.length-1; i++) {
+      if (t >= stops[i][0] && t <= stops[i+1][0]) {
+        lower = stops[i]; upper = stops[i+1];
+        break;
+      }
+    }
+    const range = upper[0] - lower[0];
+    const frac = range === 0 ? 0 : (t - lower[0]) / range;
+    const r = Math.round(lower[1][0] + frac * (upper[1][0] - lower[1][0]));
+    const g = Math.round(lower[1][1] + frac * (upper[1][1] - lower[1][1]));
+    const b = Math.round(lower[1][2] + frac * (upper[1][2] - lower[1][2]));
+    return `rgb(${r},${g},${b})`;
+  }
+
+  function plotAll() {
+    if (!state.results) return;
+    if (!canPlot()) return;
+    const colors = getThemeColors();
+    const traces = [];
+    const Rvals = state.sortedCoatings.map(k => state.results[k].R_eval);
+    const minR = Math.min(...Rvals), maxR = Math.max(...Rvals);
+    const norm = val => (val - minR) / (maxR - minR || 1);
+    for (const key of state.sortedCoatings) {
+      const color = plasmaColor(norm(state.results[key].R_eval));
+      traces.push({
+        x: state.wavelengths,
+        y: Array.from(state.results[key].R),
+        type: 'scattergl',
+        mode: 'lines',
+        line: { color, width: 0.7 },
+        showlegend: false,
+        hoverinfo: 'none'
+      });
+    }
+    const bestR = state.sortedCoatings[0];
+    const bestT = state.sortedTransmitters[0] || state.sortedCoatings[state.sortedCoatings.length-1];
+    traces.push({
+      x: state.wavelengths, y: Array.from(state.results[bestR].R),
+      type: 'scattergl', mode: 'lines',
+      line: { color: colors.accent, width: 2 },
+      name: `Best R: ${bestR}`
+    });
+    traces.push({
+      x: state.wavelengths, y: Array.from(state.results[bestT].R),
+      type: 'scattergl', mode: 'lines',
+      line: { color: colors.accent2, width: 2, dash: 'dash' },
+      name: `Best T: ${bestT}`
+    });
+
+    const layout = {
+      title: `All ${state.sortedCoatings.length} Coatings — Reflectance`,
+      xaxis: { title: 'Wavelength (nm)', gridcolor: colors.border, color: colors.textDim },
+      yaxis: { title: 'Reflectance R', gridcolor: colors.border, color: colors.textDim, range: [-0.02,1.05] },
+      paper_bgcolor: colors.bg,
+      plot_bgcolor: colors.panel,
+      font: { color: colors.text },
+      legend: { font: { color: colors.text } },
+      margin: { l: 50, r: 20, t: 50, b: 40 }
+    };
+    renderPlot('plotAll', traces, layout);
+  }
+
+  function plotBest() {
+    if (!state.results) return;
+    if (!canPlot()) return;
+    const colors = getThemeColors();
+    const bestR = state.sortedCoatings[0];
+    const bestT = state.sortedTransmitters[0] || state.sortedCoatings[state.sortedCoatings.length-1];
+    const fig = {
+      data: [
+        { x: state.wavelengths, y: Array.from(state.results[bestR].R), type: 'scattergl', mode: 'lines', name: 'Best Reflector R', line: { color: colors.accent, width: 2 }, xaxis: 'x', yaxis: 'y' },
+        { x: state.wavelengths, y: Array.from(state.results[bestR].T), type: 'scattergl', mode: 'lines', name: 'Best Reflector T', line: { color: colors.accent2, width: 2, dash: 'dash' }, xaxis: 'x', yaxis: 'y' },
+        { x: state.wavelengths, y: Array.from(state.results[bestT].R), type: 'scattergl', mode: 'lines', name: 'Best Transmitter R', line: { color: colors.accent, width: 2 }, xaxis: 'x2', yaxis: 'y2' },
+        { x: state.wavelengths, y: Array.from(state.results[bestT].T), type: 'scattergl', mode: 'lines', name: 'Best Transmitter T', line: { color: colors.accent2, width: 2, dash: 'dash' }, xaxis: 'x2', yaxis: 'y2' }
+      ],
+      layout: {
+        grid: { rows: 1, columns: 2, pattern: 'independent' },
+        xaxis: { title: 'Wavelength', gridcolor: colors.border, color: colors.textDim },
+        yaxis: { title: 'R/T', range: [-0.02,1.05], gridcolor: colors.border, color: colors.textDim },
+        xaxis2: { title: 'Wavelength', gridcolor: colors.border, color: colors.textDim },
+        yaxis2: { title: 'R/T', range: [-0.02,1.05], gridcolor: colors.border, color: colors.textDim },
+        annotations: [
+          { text: `Best Reflector [${bestR}]`, xref: 'paper', yref: 'paper', x: 0.2, y: 1.05, showarrow: false, font: { color: colors.text } },
+          { text: `Best Transmitter [${bestT}]`, xref: 'paper', yref: 'paper', x: 0.8, y: 1.05, showarrow: false, font: { color: colors.text } }
+        ],
+        paper_bgcolor: colors.bg, plot_bgcolor: colors.panel,
+        font: { color: colors.text },
+        legend: { orientation: 'h', y: -0.16, x: 0.5, xanchor: 'center', font: { color: colors.text } },
+        margin: { l: 58, r: 24, t: 60, b: 72 }
+      }
+    };
+    renderPlot('plotBest', fig.data, fig.layout);
+  }
+
+  function plotTop() {
+    if (!state.results) return;
+    if (!canPlot()) return;
+    const colors = getThemeColors();
+    const n = Math.min(parseInt(document.getElementById('topN').value) || 10, state.sortedCoatings.length);
+    const showT = document.getElementById('showT').checked;
+    const topKeys = state.sortedCoatings.slice(0, n);
+    const traces = [];
+    topKeys.forEach((key, idx) => {
+      const color = topTraceColor(idx);
+      traces.push({
+        x: state.wavelengths, y: Array.from(state.results[key].R),
+        type: 'scattergl', mode: 'lines', name: key,
+        line: { color, width: 1.8 }
+      });
+      if (showT) {
+        traces.push({
+          x: state.wavelengths, y: Array.from(state.results[key].T),
+          type: 'scattergl', mode: 'lines', name: `${key} T`,
+          line: { color, width: 0.8, dash: 'dash' }, showlegend: false
+        });
+      }
+    });
+    const layout = {
+      title: `Top ${n} Reflectors`,
+      xaxis: { title: 'Wavelength (nm)', gridcolor: colors.border, color: colors.textDim },
+      yaxis: { title: 'Reflectance R', range: [-0.02,1.05], gridcolor: colors.border, color: colors.textDim },
+      paper_bgcolor: colors.bg, plot_bgcolor: colors.panel,
+      font: { color: colors.text },
+      legend: { font: { color: colors.text }, itemsizing: 'constant' },
+      margin: { l: 58, r: 24, t: 52, b: 52 }
+    };
+    renderPlot('plotTop', traces, layout);
+  }
+
+  function plotInspector(coatingArray) {
+    if (!canPlot()) return;
+    const unknown = coatingArray.find(key => !state.materials[key]);
+    if (unknown) { setStatus(`Unknown material "${unknown}".`); return; }
+    state.inspectedCoating = [...coatingArray];
+    const colors = getThemeColors();
+    const lambdaDesign = parseFloat(document.getElementById('lambdaDesign').value);
+    const nInc = parseFloat(document.getElementById('nIncident').value);
+    const nSub = parseFloat(document.getElementById('nSubstrate').value);
+    const nValues = {};
+    for (const [key, mat] of Object.entries(state.materials)) {
+      nValues[key] = { n: mat.n, lambda_design: lambdaDesign };
+    }
+    const { R, T } = TMM.compute(coatingArray, nValues, state.wavelengths, nInc, nSub);
+    const traces = [
+      { x: state.wavelengths, y: Array.from(R), type: 'scattergl', mode: 'lines', name: 'R', line: { color: colors.accent, width: 2 } },
+      { x: state.wavelengths, y: Array.from(T), type: 'scattergl', mode: 'lines', name: 'T', line: { color: colors.accent2, width: 2, dash: 'dash' } }
+    ];
+    const layout = {
+      title: `Coating Inspector: [${coatingArray.join(' ')}]`,
+      xaxis: { title: 'Wavelength (nm)', gridcolor: colors.border, color: colors.textDim },
+      yaxis: { title: 'R / T', range: [-0.02,1.05], gridcolor: colors.border, color: colors.textDim },
+      paper_bgcolor: colors.bg, plot_bgcolor: colors.bg,
+      font: { color: colors.text },
+      legend: { orientation: 'h', y: -0.14, x: 0.5, xanchor: 'center', font: { color: colors.text } },
+      margin: { l: 58, r: 24, t: 52, b: 68 }
+    };
+    renderPlot('plotInspector', traces, layout);
+    const idx = state.wavelengths.findIndex(w => w >= lambdaDesign);
+    const closestIdx = idx === -1 ? state.wavelengths.length-1 : idx;
+    setStatus(`Coating [${coatingArray.join(' ')}] → R(λ=${lambdaDesign} nm) = ${R[closestIdx].toFixed(4)}   T = ${T[closestIdx].toFixed(4)}`);
+  }
+
+  document.getElementById('inspectBtn').addEventListener('click', () => {
+    const text = document.getElementById('customCoating').value.trim().toUpperCase().split(/\s+/);
+    if (text.length === 0 || text[0] === '') { setStatus('⚠ Enter a coating sequence first.'); return; }
+    if (!state.wavelengths) { setStatus('⚠ Run a simulation first.'); return; }
+    const unknown = text.find(key => !state.materials[key]);
+    if (unknown) { setStatus(`Unknown material "${unknown}".`); return; }
+    plotInspector(text);
+  });
+
+  // ──────────────────────────────────────────────
+  // Rankings Table
+  // ──────────────────────────────────────────────
+  function renderTable() {
+    const tbody = document.querySelector('#rankingsTable tbody');
+    tbody.innerHTML = '';
+    state.sortedCoatings.forEach((key, rank) => {
+      const d = state.results[key];
+      const R_eval = d.R_eval;
+      const R = d.R;
+      const T = d.T;
+      const T_eval = Number.isFinite(d.T_eval) ? d.T_eval : 1 - R_eval;
+      const R_avg = Number.isFinite(d.R_avg) ? d.R_avg : average(R);
+      const T_avg = Number.isFinite(d.T_avg) ? d.T_avg : average(T);
+      const maxR = Number.isFinite(d.R_max) ? d.R_max : Math.max(...R);
+      const minR = Number.isFinite(d.R_min) ? d.R_min : Math.min(...R);
+      const minT = Number.isFinite(d.T_min) ? d.T_min : Math.min(...T);
+      const half = R_eval / 2;
+      let bw = '—';
+      const above = state.wavelengths.filter((_,i) => R[i] >= half);
+      if (above.length >= 2) {
+        bw = (above[above.length-1] - above[0]).toFixed(1) + ' nm';
+      }
+      const tr = document.createElement('tr');
+      tr.dataset.rEval = R_eval;
+      tr.dataset.rAvg = R_avg;
+      tr.dataset.rMin = minR;
+      tr.dataset.tEval = T_eval;
+      tr.dataset.tAvg = T_avg;
+      tr.dataset.tMin = minT;
+      tr.dataset.rMax = maxR;
+      tr.dataset.bandwidth = parseFloat(bw) || 0;
+      tr.innerHTML = `<td>${rank+1}</td><td>${key}</td><td style="color:${R_eval>=0.5?'var(--accent)':'var(--accent2)'}">${R_eval.toFixed(4)}</td><td>${T_eval.toFixed(4)}</td><td>${maxR.toFixed(4)}</td><td>${minR.toFixed(4)}</td><td>${bw}</td>`;
+      tr.addEventListener('dblclick', () => {
+        document.getElementById('customCoating').value = key.split('').join(' ');
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelector('.tab[data-tab="inspector"]').classList.add('active');
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.getElementById('tab-inspector').classList.add('active');
+        plotInspector(key.split(''));
+      });
+      tbody.appendChild(tr);
+    });
+
+    // Sorting
+    document.querySelectorAll('#rankingsTable th').forEach((th, colIdx) => {
+      th.onclick = () => {
+        const tbody = document.querySelector('#rankingsTable tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        const desc = !th.classList.contains('desc');
+        document.querySelectorAll('#rankingsTable th').forEach(h => h.classList.remove('asc','desc'));
+        th.classList.add(desc ? 'desc' : 'asc');
+        rows.sort((a,b) => {
+          if (colIdx === 2) return compareRowMetric(a, b, ['rEval', 'rAvg', 'rMin'], desc);
+          if (colIdx === 3) return compareRowMetric(a, b, ['tEval', 'tAvg', 'tMin'], desc);
+          if (colIdx === 4) return compareRowMetric(a, b, ['rMax'], desc);
+          if (colIdx === 5) return compareRowMetric(a, b, ['rMin'], desc);
+          if (colIdx === 6) return compareRowMetric(a, b, ['bandwidth'], desc);
+          const valA = a.children[colIdx].innerText, valB = b.children[colIdx].innerText;
+          const numA = parseFloat(valA), numB = parseFloat(valB);
+          if (!isNaN(numA) && !isNaN(numB)) return desc ? numB - numA : numA - numB;
+          return desc ? valB.localeCompare(valA) : valA.localeCompare(valB);
+        });
+        rows.forEach((row, index) => {
+          row.children[0].innerText = index + 1;
+          tbody.appendChild(row);
+        });
+      };
+    });
+  }
+
+  // CSV Export
+  document.getElementById('exportBtn').addEventListener('click', () => {
+    if (!state.results) { setStatus('⚠ Nothing to export. Run simulation first.'); return; }
+    let csv = 'coating,R_at_design,T_at_design,' + state.wavelengths.map(l => `R_${l.toFixed(1)}nm`).join(',') + '\n';
+    state.sortedCoatings.forEach(key => {
+      const d = state.results[key];
+      const row = [key, d.R_eval.toFixed(6), d.T_eval.toFixed(6), ...Array.from(d.R).map(v => v.toFixed(6))];
+      csv += row.join(',') + '\n';
+    });
+    const blob = new Blob([csv], {type: 'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'coating_results.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    setStatus('✔ CSV exported.');
+  });
+
+  function setStatus(msg) {
+    document.getElementById('statusBar').textContent = msg;
+  }
+
+  document.getElementById('replotTopBtn').addEventListener('click', plotTop);
+
+  // Initial render
+  renderMaterials();
+  updatePossibleCount();
+  setStatus('Ready — configure parameters and click ▶ Run Simulation');
+})();
+</script>
+</body>
+</html>
